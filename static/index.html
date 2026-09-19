@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueCampus — Проверенный визуальный профиль университета</title>
+    <meta name="description" content="AI-сервис формирования проверенного визуального профиля кампуса и студенческой жизни университетов по всему миру.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/landing.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/credits.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+    
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area" id="logoArea" style="cursor: pointer;" title="TrueCampus - На главную">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title" data-i18n="app_name">TrueCampus</span>
+                    <span class="logo-badge" data-i18n="app_badge">Global AI</span>
+                </div>
+            </div>
+
+            <div class="nav-links-wrap">
+                <button id="navHomeBtn" class="btn-nav-link active" type="button">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span data-i18n="nav_home">Главное меню</span>
+                </button>
+                <button id="navAuditBtn" class="btn-nav-link" type="button">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span data-i18n="nav_audit">Поиск и аудит</span>
+                </button>
+            </div>
+
+            <div class="header-nav-right">
+                
+                <div class="lang-switcher-group" id="langSwitcherGroup">
+                    <button type="button" class="lang-btn active" data-lang="ru">🇷🇺 RU</button>
+                    <button type="button" class="lang-btn" data-lang="en">🇬🇧 EN</button>
+                    <button type="button" class="lang-btn" data-lang="kz">🇰🇿 KZ</button>
+                </div>
+
+                <button id="aboutServiceBtn" class="btn-nav-ghost" type="button">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span data-i18n="nav_about">О сервисе</span>
+                </button>
+
+                <button id="openCompareBtn" class="btn-compare-nav" type="button">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 3h5v5"></path>
+                        <path d="M4 20L21 3"></path>
+                        <path d="M21 16v5h-5"></path>
+                        <path d="M15 15l6 6"></path>
+                        <path d="M4 4l5 5"></path>
+                    </svg>
+                    <span data-i18n="nav_compare">Сравнить</span>
+                </button>
+
+                <div id="accountArea" class="account-area">
+                    <div id="authLoggedOut" class="auth-logged-out">
+                        <button id="openAuthModalBtn" class="btn-auth-nav" type="button">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span data-i18n="nav_login_register">Вход / Регистрация</span>
+                        </button>
+                    </div>
+
+                    <div id="authLoggedIn" class="auth-logged-in hidden" style="display: flex; align-items: center; gap: 8px;">
+                        
+                        <div id="userCreditsBadge" class="user-credits-badge" title="Ваш баланс проверок. Нажмите для пополнения">
+                            <span class="coin-icon">🪙</span>
+                            <span id="userCreditsCount">5</span>
+                            <span id="headerCreditsDisplay">5 кредитов</span>
+                        </div>
+
+                        <div class="user-pill" id="userPillBtn">
+                            <span class="user-avatar" id="userAvatarText">U</span>
+                            <span class="user-name" id="userNameText">Пользователь</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div id="accountDropdown" class="account-dropdown hidden">
+                            <div class="dropdown-header">
+                                <strong id="dropdownUserName">Пользователь</strong>
+                                <span id="dropdownUserEmail" class="dropdown-email">user@truecampus.io</span>
+                                <div class="dropdown-balance-box" style="margin-top: 8px; padding: 6px 10px; background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 6px; font-size: 12px; color: #fef08a;">
+                                    <span>Баланс:</span> <strong id="dropdownCreditsBalance">5 кредитов</strong>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <button type="button" class="dropdown-item" id="navTopUpBtn">
+                                <span style="font-size: 14px;">🪙</span>
+                                <span data-i18n="nav_topup">Пополнить кредиты</span>
+                            </button>
+                            <button type="button" class="dropdown-item" id="myAuditsBtn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <span data-i18n="nav_history">История проверок</span>
+                            </button>
+                            <button type="button" class="dropdown-item text-danger" id="logoutBtn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                <span data-i18n="nav_logout">Выйти</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Меню">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="mobileNavOverlay" class="mobile-nav-overlay"></div>
+    <nav id="mobileNavPanel" class="mobile-nav-panel">
+        <button id="mobileNavClose" class="mobile-nav-close" type="button" aria-label="Закрыть">✕</button>
+
+        <button id="mobileNavHome" class="mobile-nav-item active" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span data-i18n="nav_home">Главное меню</span>
+        </button>
+        <button id="mobileNavAudit" class="mobile-nav-item" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span data-i18n="nav_audit">Поиск и аудит</span>
+        </button>
+        <button id="mobileNavCompare" class="mobile-nav-item" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 3h5v5"></path>
+                <path d="M4 20L21 3"></path>
+                <path d="M21 16v5h-5"></path>
+                <path d="M15 15l6 6"></path>
+                <path d="M4 4l5 5"></path>
+            </svg>
+            <span data-i18n="nav_compare">Сравнить университеты</span>
+        </button>
+        <button id="mobileNavAbout" class="mobile-nav-item" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span data-i18n="nav_about">О сервисе</span>
+        </button>
+
+        <div class="mobile-nav-divider"></div>
+
+        <div class="mobile-nav-lang-group" id="mobileLangGroup">
+            <button type="button" class="lang-btn active" data-lang="ru">🇷🇺 RU</button>
+            <button type="button" class="lang-btn" data-lang="en">🇬🇧 EN</button>
+            <button type="button" class="lang-btn" data-lang="kz">🇰🇿 KZ</button>
+        </div>
+
+        <div class="mobile-nav-divider"></div>
+
+        <div class="mobile-nav-user-section" id="mobileUserSection">
+            
+            <button id="mobileLoginBtn" class="mobile-nav-item" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span data-i18n="nav_login_register">Вход / Регистрация</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        
+        <section id="landingView" class="landing-view">
+            <div class="landing-hero">
+                <div class="hero-pill-tag">
+                    <span>✨</span>
+                    <span data-i18n="hero_tag">AI Верификация кампусов 2026</span>
+                </div>
+                
+                <h1 class="hero-main-slogan" data-i18n="slogan_title">TrueCampus — выбери свою жизнь с умом</h1>
+                <p class="hero-main-subtitle" data-i18n="slogan_subtitle">
+                    Интеллектуальная платформа независимой верификации кампусов университетов со всего мира. Реальные фотографии, честная оценка инфраструктуры и защита от ложных ожиданий.
+                </p>
+
+                <div class="hero-cta-group">
+                    <button type="button" id="heroBtnStartAudit" class="btn-hero-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <span data-i18n="btn_start_audit">Начать проверку университета</span>
+                    </button>
+                    <button type="button" id="heroBtnGoToSearch" class="btn-hero-secondary">
+                        <span data-i18n="btn_go_to_search">Перейти к поиску</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="hero-stats-row">
+                    <div class="stat-item">
+                        <span class="stat-icon">🏛️</span>
+                        <span data-i18n="stat_universities">1,500+ кампусов в базе</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">🎯</span>
+                        <span data-i18n="stat_categories">8 зон студенческой жизни</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">🛡️</span>
+                        <span data-i18n="stat_accuracy">99.4% точность отсева фейков</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="showcase-section">
+                <div class="showcase-header">
+                    <div class="showcase-titles">
+                        <h2 data-i18n="showcase_title">Популярные университеты мира и Казахстана</h2>
+                        <p data-i18n="showcase_subtitle">Исследуйте проверенные фотостудии, общежития, библиотеки и учебные корпуса перед поступлением</p>
+                    </div>
+                    <div class="showcase-filter-pills">
+                        <button type="button" class="filter-pill active" data-filter="all">Все вузы</button>
+                        <button type="button" class="filter-pill" data-filter="kz">🇰🇿 Казахстан</button>
+                        <button type="button" class="filter-pill" data-filter="world">🌍 Мир</button>
+                    </div>
+                </div>
+
+                <div id="universityShowcaseGrid" class="univ-showcase-grid">
+                    
+                </div>
+            </div>
+        </section>
+
+        <section id="auditView" class="audit-view hidden">
+            
+            <section class="hero-section">
+                <div class="hero-tag" data-i18n="hero_tag">Независимая верификация кампусов</div>
+                <h1 class="hero-title" data-i18n="search_hero_title">Проверенный визуальный профиль кампуса</h1>
+                <p class="hero-subtitle" data-i18n="search_hero_subtitle">
+                    Быстрый сервис проверки кампусов, общежитий, аудиторий, библиотек и студенческой среды с открытыми источниками и отсевом недостоверных фото.
+                </p>
+
+            <form id="searchForm" class="search-box">
+                <div class="search-input-wrap">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input 
+                        type="text" 
+                        id="universityInput" 
+                        placeholder="Введите название университета (например: КазНУ, Назарбаев Университет, МГУ, MIT)..." 
+                        autocomplete="off"
+                        required
+                    />
+                    <button type="submit" id="searchBtn" class="btn-primary">
+                        <span>Анализировать</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="quick-examples">
+                    <span class="examples-label">Часто ищут:</span>
+                    <button type="button" class="tag-btn" data-query="КазНУ им. Аль-Фараби">КазНУ им. Аль-Фараби</button>
+                    <button type="button" class="tag-btn" data-query="Назарбаев Университет">Назарбаев Университет</button>
+                    <button type="button" class="tag-btn" data-query="КБТУ">КБТУ</button>
+                    <button type="button" class="tag-btn" data-query="МГУ имени М.В. Ломоносова">МГУ Ломоносова</button>
+                    <button type="button" class="tag-btn" data-query="Massachusetts Institute of Technology">MIT</button>
+                    <button type="button" class="tag-btn" data-query="Aitu University">Aitu University</button>
+                    <button type="button" class="tag-btn" data-query="Политех">Политех</button>
+                </div>
+            </form>
+
+            <div id="ambiguityBanner" class="ambiguity-banner hidden">
+                <div class="ambiguity-header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <strong>Неоднозначный запрос. Выберите конкретный университет:</strong>
+                </div>
+                <div id="ambiguityCandidatesList" class="ambiguity-chips-list"></div>
+            </div>
+
+            <div id="didYouMeanBanner" class="did-you-mean-banner hidden">
+                <div class="dym-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                </div>
+                <div class="dym-text">
+                    <span>Возможно, вы имели в виду: </span>
+                    <button id="didYouMeanBtn" class="dym-link" type="button"></button>
+                    <span class="dym-hint" id="didYouMeanHint"></span>
+                </div>
+            </div>
+        </section>
+
+        <section id="progressSection" class="progress-section hidden">
+            <div class="progress-card">
+                <div class="progress-header">
+                    <div class="progress-title-wrap">
+                        <div class="spinner-pulse"></div>
+                        <h3 id="progressStageTitle">Инициализация конвейера верификации...</h3>
+                    </div>
+                    <div class="timer-badge">
+                        <span id="elapsedTimer">0.0s</span> / ~25s
+                    </div>
+                </div>
+
+                <div class="progress-track">
+                    <div id="progressBar" class="progress-fill" style="width: 15%;"></div>
+                </div>
+
+                <div class="stages-grid">
+                    <div class="stage-step" id="step-disambiguation">
+                        <div class="step-num">1</div>
+                        <div class="step-info">
+                            <span class="step-name">Поиск университета и локации</span>
+                            <span class="step-status">Ожидание...</span>
+                        </div>
+                    </div>
+                    <div class="stage-step" id="step-aggregation">
+                        <div class="step-num">2</div>
+                        <div class="step-info">
+                            <span class="step-name">Сбор открытых фото и данных</span>
+                            <span class="step-status">Ожидание...</span>
+                        </div>
+                    </div>
+                    <div class="stage-step" id="step-phash">
+                        <div class="step-num">3</div>
+                        <div class="step-info">
+                            <span class="step-name">Удаление дубликатов</span>
+                            <span class="step-status">Ожидание...</span>
+                        </div>
+                    </div>
+                    <div class="stage-step" id="step-clip">
+                        <div class="step-num">4</div>
+                        <div class="step-info">
+                            <span class="step-name">AI-анализ фото и распределение по зонам</span>
+                            <span class="step-status">Ожидание...</span>
+                        </div>
+                    </div>
+                    <div class="stage-step" id="step-rules">
+                        <div class="step-num">5</div>
+                        <div class="step-info">
+                            <span class="step-name">Формирование отчета о кампусе</span>
+                            <span class="step-status">Ожидание...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="resultsSection" class="results-section hidden">
+            
+            <div class="profile-header-card">
+                <div class="profile-top-row">
+                    <div>
+                        <div class="location-badge" id="profileLocation">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span id="locationText">Алматы, Казахстан</span>
+                        </div>
+                        <h2 id="profileCanonicalName" class="profile-title">Казахский национальный университет имени аль-Фараби</h2>
+                        <div id="profileEnglishName" class="profile-subtitle">Al-Farabi Kazakh National University</div>
+                    </div>
+
+                    <div class="actions-group">
+                        <button id="compareThisBtn" class="btn-action btn-secondary" type="button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 3h5v5"></path>
+                                <path d="M4 20L21 3"></path>
+                                <path d="M21 16v5h-5"></path>
+                                <path d="M15 15l6 6"></path>
+                                <path d="M4 4l5 5"></path>
+                            </svg>
+                            <span>Сравнить</span>
+                        </button>
+                        <button id="downloadPdfBtn" class="btn-action btn-pdf" type="button">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Скачать PDF</span>
+                        </button>
+                        <a id="printReportBtn" target="_blank" class="btn-action btn-print">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                <rect x="6" y="14" width="12" height="8"></rect>
+                            </svg>
+                            <span>Печать</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Покрытие профиля</div>
+                        <div class="metric-value text-blue" id="kpiCoverage">0%</div>
+                        <div class="metric-sub" id="kpiCategoriesSub">0 из 8 зон кампуса</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Подтверждено фото</div>
+                        <div class="metric-value text-green" id="kpiVerifiedCount">0</div>
+                        <div class="metric-sub">Высокое качество</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Индекс достоверности</div>
+                        <div class="metric-value text-cyan" id="kpiTrustIndex">0%</div>
+                        <div class="metric-sub">Комплексная AI-оценка</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Отсеяно дубликатов</div>
+                        <div class="metric-value text-amber" id="kpiDuplicates">0</div>
+                        <div class="metric-sub">Похожие кадры убраны</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Юридическая чистота</div>
+                        <div class="metric-value text-emerald">100% Открыто</div>
+                        <div class="metric-sub">Лицензии проверены</div>
+                    </div>
+                </div>
+
+                <div class="campus-summary-card">
+                    <div class="summary-header">
+                        <div class="summary-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </div>
+                        <span class="summary-title">Краткое описание кампуса на основе проверенных источников</span>
+                        <span class="badge-ai">AI-Анализ</span>
+                    </div>
+                    <p id="campusSummaryText" class="summary-body">
+                        Загрузка описания кампуса...
+                    </p>
+                </div>
+
+                <div class="sources-status-bar">
+                    <span class="sources-title">Статус открытых API (таймаут 5.0с):</span>
+                    <div id="sourcesBadgesList" class="sources-tags-list"></div>
+                </div>
+            </div>
+
+            <div class="geo-map-card">
+                <div class="geo-map-header">
+                    <div class="geo-title-wrap">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                            <line x1="8" y1="2" x2="8" y2="18"></line>
+                            <line x1="16" y1="6" x2="16" y2="22"></line>
+                        </svg>
+                        <h3>Карта кампуса и расстояние до центра города</h3>
+                    </div>
+                    <div class="distance-badge" id="distanceBadge">
+                        <span id="distanceKm">0.0 км</span> до центра города
+                    </div>
+                </div>
+
+                <div class="geo-content-grid">
+                    <div id="campusMap" class="leaflet-map-wrap"></div>
+                    <div class="geo-meta-panel">
+                        <div class="geo-point-box">
+                            <span class="point-dot campus-dot"></span>
+                            <div>
+                                <div class="point-label">Локация кампуса</div>
+                                <strong id="campusPointTitle">Главный кампус</strong>
+                            </div>
+                        </div>
+                        <div class="geo-point-box">
+                            <span class="point-dot center-dot"></span>
+                            <div>
+                                <div class="point-label">Центр города</div>
+                                <strong id="cityCenterPointTitle">Центральный район</strong>
+                            </div>
+                        </div>
+
+                        <div class="transit-times-box">
+                            <div class="transit-item">
+                                <span class="transit-icon">🚌</span>
+                                <div>
+                                    <div class="transit-lbl">Общественный транспорт:</div>
+                                    <div class="transit-val" id="transitPublic">—</div>
+                                </div>
+                            </div>
+                            <div class="transit-item">
+                                <span class="transit-icon">🚶</span>
+                                <div>
+                                    <div class="transit-lbl">Пешком:</div>
+                                    <div class="transit-val" id="transitWalk">—</div>
+                                </div>
+                            </div>
+                            <div class="transit-item">
+                                <span class="transit-icon">🚗</span>
+                                <div>
+                                    <div class="transit-lbl">Автомобиль / Такси:</div>
+                                    <div class="transit-val" id="transitDrive">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="living-grid">
+                
+                <div class="living-card">
+                    <div class="living-card-header">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                        </svg>
+                        <h4>Климат, транспорт и ориентировочная стоимость жизни</h4>
+                    </div>
+                    <div class="living-card-body">
+                        <div class="living-row">
+                            <span class="living-lbl">Климат:</span>
+                            <span class="living-val" id="livingClimate">—</span>
+                        </div>
+                        <div class="living-row">
+                            <span class="living-lbl">Транспорт:</span>
+                            <span class="living-val" id="livingTransport">—</span>
+                        </div>
+                        <div class="living-row">
+                            <span class="living-lbl">Общежитие в месяц:</span>
+                            <span class="living-val text-green" id="livingDormCost">—</span>
+                        </div>
+                        <div class="living-row">
+                            <span class="living-lbl">Питание в месяц:</span>
+                            <span class="living-val" id="livingFoodCost">—</span>
+                        </div>
+                        <div class="living-row total-row">
+                            <span class="living-lbl">Ориентировочный бюджет:</span>
+                            <span class="living-val text-cyan font-bold" id="livingTotalCost">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="living-card">
+                    <div class="living-card-header">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                        </svg>
+                        <h4>Фотографии и отзывы студентов</h4>
+                    </div>
+                    <div class="living-card-body" id="studentReviewsContainer">
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-bar-header">
+                    <span class="filter-title">Фильтры по категориям:</span>
+                    <label class="toggle-high-trust">
+                        <input type="checkbox" id="filterHighTrustOnly" />
+                        <span class="toggle-box"></span>
+                        <span>Только высокая достоверность (≥80%)</span>
+                    </label>
+                </div>
+                <div class="filter-tabs-list" id="categoryFilterTabs">
+                    <button type="button" class="filter-tab active" data-cat="all">Все фото</button>
+                    <button type="button" class="filter-tab" data-cat="campus">Кампус</button>
+                    <button type="button" class="filter-tab" data-cat="dormitory">Общежитие</button>
+                    <button type="button" class="filter-tab" data-cat="lecture_hall">Аудитории</button>
+                    <button type="button" class="filter-tab" data-cat="library">Библиотеки</button>
+                    <button type="button" class="filter-tab" data-cat="city">Город</button>
+                    <button type="button" class="filter-tab" data-cat="sport">Спорт</button>
+                    <button type="button" class="filter-tab" data-cat="labs">Лаборатории</button>
+                    <button type="button" class="filter-tab" data-cat="student_life">Студенческая жизнь</button>
+                </div>
+            </div>
+
+            <div class="categories-container" id="categoriesContainer"></div>
+        </section>
+        
+        </section>
+    </main>
+
+    <div id="compareModal" class="modal-overlay hidden">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">Сравнение двух университетов</h3>
+                <button id="compareModalCloseBtn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="compareForm" class="compare-inputs-grid">
+                    <div class="compare-input-group">
+                        <label>Университет 1:</label>
+                        <input type="text" id="compareUniv1Input" placeholder="Например: КазНУ им. Аль-Фараби" required />
+                    </div>
+                    <div class="compare-vs-badge">VS</div>
+                    <div class="compare-input-group">
+                        <label>Университет 2:</label>
+                        <input type="text" id="compareUniv2Input" placeholder="Например: Назарбаев Университет" required />
+                    </div>
+                    <div class="compare-btn-wrap">
+                        <button type="submit" id="executeCompareBtn" class="btn-primary">
+                            <span>Сравнить</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="compareLoading" class="compare-loading hidden">
+                    <div class="spinner-pulse"></div>
+                    <span>Анализируем оба университета...</span>
+                </div>
+
+                <div id="compareResultsTable" class="compare-results-area hidden">
+                    
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="compareModalCloseBtn2" class="btn-secondary">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="attributionModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle" class="modal-title">Информация о медиафайле и источнике</h3>
+                <button id="modalCloseBtn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-img-wrap">
+                    <img id="modalImage" src="" alt="Campus Preview">
+                </div>
+                <div class="modal-meta-list">
+                    <div class="meta-row">
+                        <span class="meta-label">Категория:</span>
+                        <span id="modalCategory" class="meta-val"></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Оценка достоверности:</span>
+                        <span id="modalTrustScore" class="meta-val font-bold"></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Соответствие объекту:</span>
+                        <span id="modalConfidence" class="meta-val font-mono"></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Дата съемки / публикации:</span>
+                        <span id="modalDate" class="meta-val font-mono"></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Лицензия:</span>
+                        <span id="modalLicense" class="meta-val font-bold text-emerald"></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Автор / Источник:</span>
+                        <span id="modalAuthor" class="meta-val"></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Цифровой отпечаток:</span>
+                        <span id="modalPhash" class="meta-val font-mono"></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Первоисточник:</span>
+                        <a id="modalSourceUrl" href="#" target="_blank" class="meta-link">Открыть оригинал ↗</a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="legal-badge">✓ Открытая лицензия</span>
+                <button id="modalCloseBtn2" class="btn-secondary">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="aboutServiceModal" class="modal-overlay hidden">
+        <div class="modal-card modal-card-wide">
+            <div class="modal-header">
+                <h3 class="modal-title">О платформе TrueCampus</h3>
+                <button id="aboutServiceCloseBtn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="service-intro-block">
+                    <h4>Что такое TrueCampus?</h4>
+                    <p><strong>TrueCampus</strong> — это интеллектуальный сервис для абитуриентов, студентов и родителей, который собирает <strong>реальные, непостановочные фотографии и объективные данные</strong> об университетских кампусах со всего мира.</p>
+                    <p>В отличие от рекламных буклетов и отфотошопленных сайтов вузов, TrueCampus находит только проверенные открытые медиаматериалы, устраняет дубликаты, проверяет достоверность снимков и раскладывает их по 8 ключевым жизненным зонам кампуса.</p>
+                </div>
+
+                <div class="service-features-grid">
+                    <div class="service-feature-card">
+                        <div class="sf-icon">🌐</div>
+                        <h5>Глобальный поиск</h5>
+                        <p>Ищет данные в Википедии, свободных медиа-хранилищах (Wikimedia, Openverse), картах и по всему интернету.</p>
+                    </div>
+                    <div class="service-feature-card">
+                        <div class="sf-icon">🎯</div>
+                        <h5>Проверка достоверности</h5>
+                        <p>Искусственный интеллект отсеивает рекламные рендеры, случайные картинки и определяет, действительно ли на фото здание или зона кампуса.</p>
+                    </div>
+                    <div class="service-feature-card">
+                        <div class="sf-icon">📂</div>
+                        <h5>8 зон студенческой жизни</h5>
+                        <p>Общежития, библиотеки, спортивные залы, столовые, учебные корпуса, лаборатории, парки и зоны отдыха.</p>
+                    </div>
+                    <div class="service-feature-card">
+                        <div class="sf-icon">⚖️</div>
+                        <h5>Сравнение вузов</h5>
+                        <p>Возможность сопоставить два университета бок о бок по оснащению, качеству фото и инфраструктуре.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="aboutServiceCloseBtn2" class="btn-primary">Понятно</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal-overlay hidden">
+        <div class="modal-card auth-modal-card">
+            <div class="modal-header">
+                <h3 id="authModalTitle" class="modal-title" data-i18n="modal_auth_login_title">Вход в личный кабинет</h3>
+                <button id="authModalCloseBtn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                
+                <div id="authModalNotice" class="auth-modal-notice hidden"></div>
+
+                <div class="auth-bonus-badge" data-i18n="auth_free_credits_hint">
+                    🎁 Каждому новому пользователю дарим 5 бесплатных кредитов на проверки!
+                </div>
+
+                <div class="auth-tabs-wrap">
+                    <button id="tabAuthLogin" class="auth-tab-btn active" type="button" data-i18n="tab_login">Вход</button>
+                    <button id="tabAuthRegister" class="auth-tab-btn" type="button" data-i18n="tab_register">Регистрация</button>
+                </div>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail" data-i18n="label_email">Email</label>
+                        <input type="email" id="loginEmail" placeholder="student@example.com" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword" data-i18n="label_password">Пароль</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+                    <div id="loginError" class="auth-error-msg hidden"></div>
+                    <button type="submit" class="btn-auth-submit" data-i18n="btn_login_submit">Войти в аккаунт</button>
+                </form>
+
+                <form id="registerForm" class="auth-form hidden">
+                    <div class="form-group">
+                        <label for="regName" data-i18n="label_name">Ваше имя или никнейм</label>
+                        <input type="text" id="regName" placeholder="Алишер" required autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="regEmail" data-i18n="label_email">Email</label>
+                        <input type="email" id="regEmail" placeholder="student@example.com" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword" data-i18n="label_password">Пароль</label>
+                        <input type="password" id="regPassword" placeholder="Минимум 4 символа" required autocomplete="new-password">
+                    </div>
+                    <div id="registerError" class="auth-error-msg hidden"></div>
+                    <button type="submit" class="btn-auth-submit" data-i18n="btn_register_submit">Зарегистрироваться и получить 5 кредитов</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="topUpModal" class="modal-overlay hidden">
+        <div class="modal-card topup-modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="modal_topup_title">Пополнение баланса кредитов</h3>
+                <button id="topUpCloseBtn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="topUpNotice" class="topup-notice-alert hidden">
+                    <span class="topup-notice-icon">⚠️</span>
+                    <span id="topUpNoticeText" data-i18n="credits_depleted_desc">Кредиты закончились! Пожалуйста, пополните баланс для продолжения проверок.</span>
+                </div>
+
+                <div class="topup-packages-grid">
+                    
+                    <div class="pkg-card">
+                        <div class="pkg-title" data-i18n="pkg_starter_title">Стартовый</div>
+                        <div class="pkg-credits-count">5 🪙</div>
+                        <p class="pkg-desc" data-i18n="pkg_starter_desc">5 проверок кампусов</p>
+                        <button type="button" class="pkg-card-btn btn-free-pkg" data-pkg-id="pkg_starter" data-credits="5" data-price="0">
+                            Получить +5
+                        </button>
+                    </div>
+
+                    <div class="pkg-card popular">
+                        <div class="pkg-popular-badge">Популярный</div>
+                        <div class="pkg-title" data-i18n="pkg_pro_title">Студент Pro</div>
+                        <div class="pkg-credits-count">15 🪙</div>
+                        <p class="pkg-desc" data-i18n="pkg_pro_desc">15 проверок + детальный PDF отчет</p>
+                        <button type="button" class="pkg-card-btn" data-pkg-id="pkg_pro" data-credits="15" data-price="1500">
+                            Пополнить +15
+                        </button>
+                    </div>
+
+                    <div class="pkg-card">
+                        <div class="pkg-title" data-i18n="pkg_explorer_title">Исследователь</div>
+                        <div class="pkg-credits-count">50 🪙</div>
+                        <p class="pkg-desc" data-i18n="pkg_explorer_desc">50 проверок + сравнение без ограничений</p>
+                        <button type="button" class="pkg-card-btn" data-pkg-id="pkg_explorer" data-credits="50" data-price="4500">
+                            Пополнить +50
+                        </button>
+                    </div>
+                </div>
+
+                <div class="promo-box">
+                    <div class="promo-box-title">
+                        <span>🎟️</span>
+                        <span data-i18n="promo_title">Есть промокод?</span>
+                    </div>
+                    <form id="promoForm">
+                        <div class="promo-input-group">
+                            <input type="text" id="promoInput" placeholder="CAMPUS2026" autocomplete="off" />
+                            <button type="submit" class="btn-promo-apply" data-i18n="promo_apply_btn">Применить</button>
+                        </div>
+                    </form>
+                    <div id="promoError" class="promo-feedback error hidden"></div>
+                    <div id="promoSuccess" class="promo-feedback success hidden"></div>
+                    <div class="promo-hints" data-i18n="promo_hint">
+                        Используйте промокоды: CAMPUS2026, STUDENT или LOCUS для бесплатных кредитов.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="topUpCloseBtn2" class="btn-secondary" data-i18n="btn_close">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="myAuditsModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" data-i18n="nav_history">История проверенных университетов</h3>
+                <button id="myAuditsCloseBtn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="myAuditsList" class="my-audits-container">
+                    
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="clearAuditsHistoryBtn" class="btn-secondary">Очистить историю</button>
+                <button id="myAuditsCloseBtn2" class="btn-primary" data-i18n="btn_close">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="/js/i18n.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/credits.js"></script>
+    <script src="/js/landing.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

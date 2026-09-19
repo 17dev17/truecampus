@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  truecampus:
+    build: .
+    container_name: truecampus_app
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - MAPILLARY_CLIENT_TOKEN=${MAPILLARY_CLIENT_TOKEN:-}
+      - AGENCY_NAME=${AGENCY_NAME:-EduGlobal Media & Verification}
+      - AGENCY_CONTACT_EMAIL=${AGENCY_CONTACT_EMAIL:-audit@eduglobal.io}
+    restart: unless-stopped
