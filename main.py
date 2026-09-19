@@ -259,10 +259,10 @@ async def view_print_report(profile_id: str):
         raise HTTPException(status_code=404, detail="Profile not found")
 
     categories_html = ""
-    for c_key, c_info in profile["categories"].items():
+    for c_key, c_info in profile.get("categories", {}).items():
         is_v = c_info.get("is_verified")
         badge_cls = "badge-verified" if is_v else "badge-unverified"
-        badge_text = f"ВЕРИФИЦИРОВАНО ({c_info.get('items_count')} фото)" if is_v else "НЕТ ВЕРИФИЦИРОВАННЫХ ДАННЫХ"
+        badge_text = f"ВЕРИФИЦИРОВАНО ({c_info.get('items_count', 0)} фото)" if is_v else "НЕТ ВЕРИФИЦИРОВАННЫХ ДАННЫХ"
         
         cards_html = ""
         for it in c_info.get("items", []):
@@ -270,34 +270,41 @@ async def view_print_report(profile_id: str):
             <div class="print-card">
                 <img src="{it.get('preview_url')}" alt="{it.get('title')}" />
                 <div class="print-card-body">
-                    <strong>{it.get('title')[:30]}</strong>
+                    <strong>{it.get('title', '')[:30]}</strong>
                     <div>Достоверность: {it.get('trust_score', 80)}% ({it.get('trust_label', 'Подтверждено')})</div>
-                    <div>Лицензия: <span class="badge-cc">{it.get('license_name')}</span></div>
-                    <div class="small-text">Дата: {it.get('date_published')} | Автор: {it.get('author')[:25]}</div>
+                    <div>Лицензия: <span class="badge-cc">{it.get('license_name', '')}</span></div>
+                    <div class="small-text">Дата: {it.get('date_published', '')} | Автор: {it.get('author', '')[:25]}</div>
                 </div>
-            </div>"""
-        
+            </div>
+            """
         categories_html += f"""
         <section class="category-section">
             <div class="cat-header">
-                <h2>{c_info.get('title')}</h2>
+                <h2>{c_info.get('title', '')}</h2>
                 <span class="badge {badge_cls}">{badge_text}</span>
             </div>
-            <p class="cat-desc">{c_info.get('description')}</p>
+            <p class="cat-desc">{c_info.get('description', '')}</p>
             <div class="cards-grid">
                 {cards_html if cards_html else '<p class="empty-text">Принцип честной неопределенности: нет подтвержденных снимков</p>'}
             </div>
-        </section>"""
+        </section>
+        """
 
     campus_data = profile.get("campus_data", {})
-    cost_data = campus_data.get("living_cost", {})
-    sources_html = "".join([f"<li><strong>{s.get('source')}</strong>: {s.get('status')} ({s.get('count', 0)} элементов)</li>" for s in profile.get("data_sources", [])])
+    cost_data = campus_data.get("cost_of_living", {})
+    
+    sources_html = ""
+    for s_name, s_info in profile.get("sources_status", {}).items():
+        st = "✅ Доступен" if s_info.get("status") == "ok" else "⚠️ Ограничен"
+        sources_html += f"<li><strong>{s_name}:</strong> {st} ({s_info.get('count', 0)} элементов)</li>"
 
-    return f"""<!DOCTYPE html>
+    agency_branding = profile.get("agency_branding", {})
+
+    html_content = f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>TrueCampus Audit - {profile['canonical_name']}</title>
+    <title>TrueCampus Audit - {profile.get('canonical_name', '')}</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 40px; color: #1e293b; }}
         .header {{ display: flex; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 24px; }}
@@ -324,17 +331,17 @@ async def view_print_report(profile_id: str):
     <button class="print-btn" onclick="window.print()">Печать / Сохранить в PDF</button>
     <div class="header">
         <div>
-            <h1>{profile['canonical_name']}</h1>
-            <div>{profile['english_name']} | {profile['city']}, {profile['country']}</div>
+            <h1>{profile.get('canonical_name', '')}</h1>
+            <div>{profile.get('english_name', '')} | {profile.get('city', '')}, {profile.get('country', '')}</div>
         </div>
         <div class="agency">
-            <strong>{profile['agency_branding']['name']}</strong><br/>
-            {profile['agency_branding']['contact_email']}
+            <strong>{agency_branding.get('name', '')}</strong><br/>
+            {agency_branding.get('contact_email', '')}
         </div>
     </div>
     
     <div class="summary-box">
-        «{profile['campus_summary']}»
+        «{profile.get('campus_summary', '')}»
     </div>
 
     <div class="bonus-box">
@@ -350,3 +357,7 @@ async def view_print_report(profile_id: str):
     {categories_html}
 </body>
 </html>"""
+    return HTMLResponse(content=html_content)
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
