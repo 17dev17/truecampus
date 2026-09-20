@@ -1,6 +1,8 @@
 # TrueCampus (Кейс 01: «Визуальный профиль университета»)
 ### LOCUS Startup Hackathon 2026 | Код кейса: `LOCUSCASE1`
 
+сам деплой http://94.131.94.213
+
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
 [![License](https://img.shields.io/badge/License-Creative%20Commons%20Verified-10b981.svg)](#лицензии-и-юридическая-чистота)
